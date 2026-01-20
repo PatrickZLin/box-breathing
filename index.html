@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Breathe Ultimate</title>
+    <style>
+        :root {
+            /* Apple Standard Animation Curve */
+            --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
+            --active-green: #34c759;
+        }
+
+        /* --- THEME DEFINITIONS --- */
+
+        /* 1. Dark Mode (Deep Space) */
+        [data-theme="dark"] {
+            /* A subtle radial gradient for depth */
+            --bg-gradient: radial-gradient(circle at 50% 120%, #1c3d52, #0f1720 60%, #000000);
+
+            --glass-panel: rgba(28, 28, 30, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #c7c7cc;
+            --label-shadow: 0 1px 8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(94, 172, 252, 0.25);
+
+            /* The Orb: Glowing internal light */
+            --orb-bg: radial-gradient(circle at 30% 30%, #5eacfc, #184e68);
+            --orb-shadow: 0 0 60px rgba(50, 150, 255, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.1);
+
+            --segment-bg: rgba(118, 118, 128, 0.24);
+            --segment-pill: #636366;
+            --slider-track: #3a3a3c;
+        }
+
+        /* 2. Light Mode (Morning Vapor) */
+        [data-theme="light"] {
+            /* Soft, airy gradient */
+            --bg-gradient: linear-gradient(135deg, #eef2f3 0%, #d9e4f5 100%);
+
+            --glass-panel: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+
+            /* The Orb: Soft porcelain/water look */
+            --orb-bg: linear-gradient(135deg, #ffffff 0%, #c4d6ee 100%);
+            --orb-shadow: 0 20px 50px rgba(166, 185, 214, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+
+            --segment-bg: rgba(118, 118, 128, 0.12);
+            --segment-pill: #ffffff;
+            --slider-track: #d1d1d6;
+            --label-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- LAYOUT --- */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-gradient);
+            background-size: 200% 200%;
+            /* Subtle drift animation for background */
+            animation: bg-drift 20s ease infinite alternate;
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        @keyframes bg-drift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* --- THE ORB (The Interaction) --- */
+        .stage {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Wrapper positions the orb but is NOT the click target */
+        .orb-wrapper {
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* The Orb IS the click target. It scales, so the click area scales. */
+        .orb {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--orb-bg);
+            box-shadow: var(--orb-shadow);
+            transform: scale(1);
+            will-change: transform;
+            cursor: pointer;
+            z-index: 5;
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+            /* Click press feel */
+        }
+
+        /* When user clicks and holds, it shrinks slightly */
+        .orb:active {
+            transform: scale(0.95) !important;
+        }
+
+        /* Breathing Animation */
+        .animate-cycle .orb {
+            animation: breathe-physics 16s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+        }
+
+        /* Text Layer - Pointer events none so clicks pass through to Orb */
+        .content-layer {
+            position: absolute;
+            z-index: 10;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-shadow: var(--label-shadow);
+        }
+
+        .timer {
+            font-size: 5rem;
+            font-weight: 100;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            letter-spacing: -2px;
+            text-shadow: var(--label-shadow);
+        }
+
+        /* --- CONTROL DOCK --- */
+        .dock {
+            width: 85%;
+            max-width: 340px;
+            margin-bottom: 50px;
+            padding: 24px;
+            border-radius: 32px;
+            background: var(--glass-panel);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            transition: opacity 0.5s;
+        }
+
+        /* Dim dock when active */
+        body.running .dock {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        body.running .dock:hover {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Row 1: Segmented Control */
+        .segmented-control {
+            display: flex;
+            background: var(--segment-bg);
+            padding: 3px;
+            border-radius: 12px;
+            position: relative;
+            height: 32px;
+        }
+
+        .segmented-control input {
+            display: none;
+        }
+
+        .segmented-control label {
+            flex: 1;
+            text-align: center;
+            line-height: 32px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.3s;
+        }
+
+        .segment-pill {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            left: 3px;
+            width: calc(33.33% - 4px);
+            background: var(--segment-pill);
+            border-radius: 9px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s var(--ease-spring);
+            z-index: 1;
+        }
+
+        #theme-system:checked~.segment-pill {
+            transform: translateX(0%);
+        }
+
+        #theme-light:checked~.segment-pill {
+            transform: translateX(100%) translateX(2px);
+        }
+
+        #theme-dark:checked~.segment-pill {
+            transform: translateX(200%) translateX(4px);
+        }
+
+        #theme-system:checked+label,
+        #theme-light:checked+label,
+        #theme-dark:checked+label {
+            color: var(--text-primary);
+        }
+
+
+        /* Row 2: Sound Toggle + Break Slider */
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* iOS Toggle Switch */
+        .ios-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 30px;
+        }
+
+        .ios-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--segment-bg);
+            border-radius: 34px;
+            transition: .3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked+.toggle-slider {
+            background-color: var(--active-green);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Slider */
+        .slider-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            background: var(--slider-track);
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            margin-top: -9px;
+        }
+
+        /* --- KEYFRAMES --- */
+        @keyframes breathe-physics {
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.35);
+            }
+
+            50% {
+                transform: scale(1.35);
+            }
+
+            75% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="stage">
+        <div class="orb-wrapper">
+            <div class="orb" id="orb"></div>
+
+            <div class="content-layer">
+                <div class="label" id="instruction-text">Relax & Breathe</div>
+                <div class="timer" id="timer-text">Start</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dock">
+
+        <div class="segmented-control">
+            <input type="radio" name="theme" id="theme-system" value="system" checked>
+            <label for="theme-system">System</label>
+            <input type="radio" name="theme" id="theme-light" value="light">
+            <label for="theme-light">Light</label>
+            <input type="radio" name="theme" id="theme-dark" value="dark">
+            <label for="theme-dark">Dark</label>
+            <div class="segment-pill"></div>
+        </div>
+
+        <div class="control-row">
+            <span class="control-label">Sound</span>
+            <label class="ios-toggle">
+                <input type="checkbox" id="sound-toggle" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="slider-wrapper">
+            <div class="slider-header">
+                <span>Break</span>
+                <span id="break-display">None</span>
+            </div>
+            <input type="range" id="break-slider" min="0" max="4" step="1" value="0">
+        </div>
+    </div>
+
+    <script>
+        // DOM
+        const orb = document.getElementById('orb'); // Specific click target
+        const orbWrapper = orb.parentElement;
+        const instructionText = document.getElementById('instruction-text');
+        const timerText = document.getElementById('timer-text');
+        const soundToggle = document.getElementById('sound-toggle');
+        const breakSlider = document.getElementById('break-slider');
+        const breakDisplay = document.getElementById('break-display');
+        const themeInputs = document.querySelectorAll('input[name="theme"]');
+
+        // STATE
+        let isRunning = false;
+        let countdownId;
+        let pendingTimeouts = []; // Array to track ALL pending timeouts
+        let audioCtx;
+        const phases = [
+            { text: "Inhale", time: 4000 },
+            { text: "Hold", time: 4000 },
+            { text: "Exhale", time: 4000 },
+            { text: "Hold", time: 4000 }
+        ];
+        const breakMap = [0, 5, 10, 20, 30];
+
+        // --- 1. Theme Logic ---
+        function setTheme(mode) {
+            const html = document.documentElement;
+            if (mode === 'system') {
+                const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } else {
+                html.setAttribute('data-theme', mode);
+            }
+        }
+        themeInputs.forEach(i => i.addEventListener('change', e => setTheme(e.target.value)));
+        setTheme('system');
+
+        // --- 2. Break Slider Logic ---
+        breakSlider.addEventListener('input', (e) => {
+            const sec = breakMap[e.target.value];
+            breakDisplay.innerText = sec === 0 ? "None" : sec + "s";
+        });
+
+        // --- 3. Audio Logic ---
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playTone(type) {
+            if (!soundToggle.checked || !audioCtx) return;
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            // Using slightly different frequencies based on theme for extra polish?
+            // Let's stick to a universal calming tone.
+            if (type === 'bell') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(180, t); // Deeper, more grounding
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.55, t + 0.6);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 4.5);
+                osc.start(t);
+                osc.stop(t + 4.6);
+            } else if (type === 'end') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, t);
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.25, t + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+                osc.start(t);
+                osc.stop(t + 2.1);
+            }
+        }
+
+        // --- 4. Core Logic ---
+        orb.addEventListener('click', toggleSession); // Listener on the ORB itself
+
+        function toggleSession() {
+            if (isRunning) stopSession();
+            else startSession();
+        }
+
+        function startSession() {
+            initAudio();
+            isRunning = true;
+            document.body.classList.add('running');
+            instructionText.innerText = "Prepare";
+            timerText.innerText = "";
+
+            const id = setTimeout(() => { if (isRunning) runCycle(); }, 1000);
+            pendingTimeouts.push(id);
+        }
+
+        function stopSession() {
+            isRunning = false;
+            document.body.classList.remove('running');
+            instructionText.innerText = "Relax & Breathe";
+            timerText.innerText = "Start";
+
+            // Clear ALL pending timeouts
+            pendingTimeouts.forEach(id => clearTimeout(id));
+            pendingTimeouts = [];
+            clearInterval(countdownId);
+
+            // CSS Animation Reset
+            orbWrapper.classList.remove('animate-cycle');
+            void orbWrapper.offsetWidth;
+
+            playTone('end');
+        }
+
+        function runCycle() {
+            if (!isRunning) return;
+
+            // Trigger visual
+            orbWrapper.classList.remove('animate-cycle');
+            void orbWrapper.offsetWidth;
+            orbWrapper.classList.add('animate-cycle');
+
+            let delay = 0;
+            phases.forEach((phase) => {
+                const id = setTimeout(() => {
+                    if (!isRunning) return;
+                    instructionText.innerText = phase.text;
+                    startCountdown(4);
+                    playTone('bell');
+                }, delay);
+                pendingTimeouts.push(id);
+                delay += phase.time;
+            });
+
+            // End of cycle / Break logic
+            const endId = setTimeout(() => {
+                if (!isRunning) return;
+                const breakTime = breakMap[breakSlider.value];
+                if (breakTime > 0) handleBreak(breakTime);
+                else runCycle();
+            }, 16000);
+            pendingTimeouts.push(endId);
+        }
+
+        function handleBreak(seconds) {
+            orbWrapper.classList.remove('animate-cycle'); // Stop expanding
+            instructionText.innerText = "Relax";
+            startCountdown(seconds);
+
+            const id = setTimeout(() => {
+                if (!isRunning) return;
+                runCycle();
+            }, seconds * 1000);
+            pendingTimeouts.push(id);
+        }
+
+        function startCountdown(duration) {
+            let timeLeft = duration;
+            timerText.innerText = timeLeft;
+            if (countdownId) clearInterval(countdownId);
+            countdownId = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) timerText.innerText = timeLeft;
+                else clearInterval(countdownId);
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>
