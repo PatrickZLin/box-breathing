@@ -3,7 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#eef2f3">
     <title>Breath</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
@@ -500,6 +502,13 @@
                 html.setAttribute('data-theme', mode);
             }
             localStorage.setItem('mindful-theme', mode);
+
+            // Update meta theme-color
+            const themeColor = document.querySelector('meta[name="theme-color"]');
+            if (themeColor) {
+                // Dark: Black (gradient edge), Light: #eef2f3 (gradient start)
+                themeColor.content = (html.getAttribute('data-theme') === 'dark') ? '#000000' : '#eef2f3';
+            }
         }
         themeInputs.forEach(i => i.addEventListener('change', e => setTheme(e.target.value)));
 

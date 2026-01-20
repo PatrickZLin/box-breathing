@@ -3,7 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f7fa">
     <title>Pomodoro</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
@@ -605,6 +607,12 @@
                 html.setAttribute('data-theme', mode);
             }
             localStorage.setItem('mindful-theme', mode);
+
+            // Update meta theme-color
+            const themeColor = document.querySelector('meta[name="theme-color"]');
+            if (themeColor) {
+                themeColor.content = (html.getAttribute('data-theme') === 'dark') ? '#000000' : '#f5f7fa';
+            }
         }
         themeInputs.forEach(i => i.addEventListener('change', e => setTheme(e.target.value)));
 
