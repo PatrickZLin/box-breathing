@@ -215,6 +215,24 @@
             flex-direction: column;
             gap: 18px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            /* Animation Props */
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 550px;
+            opacity: 1;
+            transform: translateY(0);
+            overflow: hidden;
+        }
+
+        /* Hide dock when active (Focus Mode) */
+        body.running .dock {
+            max-height: 0;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            transform: translateY(50px);
+            border-color: transparent;
+            pointer-events: none;
         }
 
         /* Segmented Control */
@@ -745,6 +763,7 @@
         function startTimer() {
             isRunning = true;
             document.body.classList.remove('paused');
+            document.body.classList.add('running');
             actionHint.textContent = 'Tap to pause';
 
             intervalId = setInterval(() => {
@@ -760,6 +779,7 @@
         function pauseTimer() {
             isRunning = false;
             document.body.classList.add('paused');
+            document.body.classList.remove('running');
             actionHint.textContent = 'Tap to resume';
             clearInterval(intervalId);
         }
@@ -767,6 +787,13 @@
         function completePhase() {
             clearInterval(intervalId);
             isRunning = false;
+            // Don't remove 'running' yet if auto-continue might kick in? 
+            // Actually, if auto-continue kicks in, we start countdown.
+            // If manual, we remove it.
+            // Let's remove it initially, then re-add if needed? 
+            // Or only remove if NOT auto-continuing. 
+            // But completePhase logic is complex. 
+            // Let's modify manual mode block instead.
             playChime();
 
             // Determine next phase
@@ -814,6 +841,7 @@
             } else {
                 // Manual mode - just set up the next phase
                 setPhase(nextPhase);
+                document.body.classList.remove('running');
                 actionHint.textContent = 'Tap to start';
                 updateDisplay();
             }
@@ -821,7 +849,9 @@
 
         function setPhase(phase) {
             currentPhase = phase;
-            document.body.className = `phase-${phase}`;
+            // Remove old phase classes
+            document.body.classList.remove('phase-work', 'phase-break', 'phase-long-break');
+            document.body.classList.add(`phase-${phase}`);
 
             switch (phase) {
                 case 'work':
@@ -861,6 +891,7 @@
             e.stopPropagation();
             clearInterval(intervalId);
             isRunning = false;
+            document.body.classList.remove('running');
             completedSessions = 0;
             setPhase('work');
             document.body.classList.remove('paused');
