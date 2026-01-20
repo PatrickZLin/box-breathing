@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pomodoro</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <style>
+        :root {
+            --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
+            --active-green: #34c759;
+        }
+
+        /* --- THEME DEFINITIONS --- */
+
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --bg-gradient: radial-gradient(circle at 50% 120%, #1c3d52, #0f1720 60%, #000000);
+            --glass-panel: rgba(28, 28, 30, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #c7c7cc;
+            --text-muted: #8e8e93;
+
+            --ring-bg: rgba(255, 255, 255, 0.1);
+            --work-color: #5eacfc;
+            --break-color: #34c759;
+            --long-break-color: #bf5af2;
+
+            --timer-glow: 0 0 60px rgba(94, 172, 252, 0.3), 0 0 120px rgba(94, 172, 252, 0.15);
+            --timer-inner-bg: radial-gradient(circle, rgba(94, 172, 252, 0.08) 0%, transparent 70%);
+
+            --segment-bg: rgba(118, 118, 128, 0.24);
+            --segment-pill: #636366;
+            --slider-track: #3a3a3c;
+            --label-shadow: 0 1px 8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(94, 172, 252, 0.25);
+        }
+
+        /* Light Mode */
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4ecf7 100%);
+            --glass-panel: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --text-muted: #aeaeb2;
+
+            --ring-bg: rgba(0, 122, 255, 0.12);
+            --work-color: #0066cc;
+            --break-color: #28a745;
+            --long-break-color: #9b45b2;
+
+            --timer-glow: 0 8px 40px rgba(0, 102, 204, 0.2), 0 2px 15px rgba(0, 0, 0, 0.08);
+            --timer-inner-bg: radial-gradient(circle, rgba(0, 122, 255, 0.06) 0%, transparent 70%);
+
+            --segment-bg: rgba(118, 118, 128, 0.12);
+            --segment-pill: #ffffff;
+            --slider-track: #d1d1d6;
+            --label-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- LAYOUT --- */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-gradient);
+            background-size: 200% 200%;
+            animation: bg-drift 20s ease infinite alternate;
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        @keyframes bg-drift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* --- TIMER STAGE --- */
+        .stage {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .timer-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            cursor: pointer;
+            transition: transform 0.2s var(--ease-spring), box-shadow 0.3s ease;
+            border-radius: 50%;
+            background: var(--timer-inner-bg);
+            box-shadow: var(--timer-glow);
+        }
+
+        .timer-container:active {
+            transform: scale(0.96);
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring__bg {
+            fill: none;
+            stroke: var(--ring-bg);
+            stroke-width: 8;
+        }
+
+        .progress-ring__progress {
+            fill: none;
+            stroke: var(--work-color);
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease, stroke 0.5s ease;
+        }
+
+        /* Timer Display */
+        .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .phase-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-shadow: var(--label-shadow);
+        }
+
+        .time-display {
+            font-size: 3.8rem;
+            font-weight: 100;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            letter-spacing: -2px;
+            text-shadow: var(--label-shadow);
+        }
+
+        .session-count {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Action hint */
+        .action-hint {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 12px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* --- CONTROL DOCK --- */
+        .dock {
+            width: 85%;
+            max-width: 340px;
+            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 28px;
+            background: var(--glass-panel);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Segmented Control */
+        .segmented-control {
+            display: flex;
+            background: var(--segment-bg);
+            padding: 3px;
+            border-radius: 10px;
+            position: relative;
+            height: 32px;
+        }
+
+        .segmented-control input {
+            display: none;
+        }
+
+        .segmented-control label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.3s;
+        }
+
+        .segment-pill {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            left: 3px;
+            width: calc(33.33% - 4px);
+            background: var(--segment-pill);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s var(--ease-spring);
+            z-index: 1;
+        }
+
+        #theme-system:checked~.segment-pill {
+            transform: translateX(0%);
+        }
+
+        #theme-light:checked~.segment-pill {
+            transform: translateX(100%) translateX(2px);
+        }
+
+        #theme-dark:checked~.segment-pill {
+            transform: translateX(200%) translateX(4px);
+        }
+
+        #theme-system:checked+label,
+        #theme-light:checked+label,
+        #theme-dark:checked+label {
+            color: var(--text-primary);
+        }
+
+        /* Control Row */
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* iOS Toggle */
+        .ios-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 30px;
+        }
+
+        .ios-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: var(--segment-bg);
+            border-radius: 34px;
+            transition: .3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s var(--ease-spring);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked+.toggle-slider {
+            background-color: var(--active-green);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Slider */
+        .slider-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            background: var(--slider-track);
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            margin-top: -8px;
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            background: var(--segment-bg);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .reset-btn:hover {
+            opacity: 0.8;
+        }
+
+        .reset-btn:active {
+            opacity: 0.6;
+        }
+
+        /* Phase colors */
+        .phase-work .progress-ring__progress {
+            stroke: var(--work-color);
+        }
+
+        .phase-break .progress-ring__progress {
+            stroke: var(--break-color);
+        }
+
+        .phase-long-break .progress-ring__progress {
+            stroke: var(--long-break-color);
+        }
+
+        .phase-work .time-display {
+            color: var(--work-color);
+        }
+
+        .phase-break .time-display {
+            color: var(--break-color);
+        }
+
+        .phase-long-break .time-display {
+            color: var(--long-break-color);
+        }
+
+        .paused .timer-display {
+            opacity: 0.5;
+        }
+
+        /* Transition phase */
+        .phase-transition .progress-ring__progress {
+            stroke: var(--text-secondary);
+        }
+
+        .phase-transition .time-display {
+            color: var(--text-secondary);
+        }
+
+        .phase-transition .phase-label {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--glass-panel);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            transition: transform 0.2s var(--ease-spring), opacity 0.2s;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+        }
+
+        .back-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: var(--text-primary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+
+<body class="phase-work">
+
+    <a href="index.html" class="back-btn" title="Back to Hub">
+        <svg viewBox="0 0 24 24">
+            <path d="M15 18l-6-6 6-6" />
+        </svg>
+    </a>
+
+    <div class="stage">
+        <div class="timer-container" id="timer-container">
+            <svg class="progress-ring" viewBox="0 0 280 280">
+                <circle class="progress-ring__bg" cx="140" cy="140" r="130"></circle>
+                <circle class="progress-ring__progress" id="progress-ring" cx="140" cy="140" r="130"></circle>
+            </svg>
+            <div class="timer-display">
+                <div class="phase-label" id="phase-label">Focus</div>
+                <div class="time-display" id="time-display">25:00</div>
+                <div class="session-count" id="session-count">Session 1 of 4</div>
+                <div class="action-hint" id="action-hint">Tap to start</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dock">
+        <div class="segmented-control">
+            <input type="radio" name="theme" id="theme-system" value="system" checked>
+            <label for="theme-system">System</label>
+            <input type="radio" name="theme" id="theme-light" value="light">
+            <label for="theme-light">Light</label>
+            <input type="radio" name="theme" id="theme-dark" value="dark">
+            <label for="theme-dark">Dark</label>
+            <div class="segment-pill"></div>
+        </div>
+
+        <div class="control-row">
+            <span class="control-label">Sound</span>
+            <label class="ios-toggle">
+                <input type="checkbox" id="sound-toggle" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="control-row">
+            <span class="control-label">Auto Continue</span>
+            <label class="ios-toggle">
+                <input type="checkbox" id="auto-continue-toggle">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="slider-wrapper">
+            <div class="slider-header">
+                <span>Work</span>
+                <span id="work-display">25 min</span>
+            </div>
+            <input type="range" id="work-slider" min="15" max="45" step="5" value="25">
+        </div>
+
+        <div class="slider-wrapper">
+            <div class="slider-header">
+                <span>Break</span>
+                <span id="break-display">5 min</span>
+            </div>
+            <input type="range" id="break-slider" min="3" max="15" step="1" value="5">
+        </div>
+
+        <div class="control-row">
+            <button class="reset-btn" id="reset-btn">Reset Session</button>
+            <button class="reset-btn" id="skip-btn">Skip →</button>
+        </div>
+    </div>
+
+    <script>
+        // === DOM ===
+        const timerContainer = document.getElementById('timer-container');
+        const progressRing = document.getElementById('progress-ring');
+        const phaseLabel = document.getElementById('phase-label');
+        const timeDisplay = document.getElementById('time-display');
+        const sessionCount = document.getElementById('session-count');
+        const actionHint = document.getElementById('action-hint');
+        const soundToggle = document.getElementById('sound-toggle');
+        const autoContinueToggle = document.getElementById('auto-continue-toggle');
+        const workSlider = document.getElementById('work-slider');
+        const breakSlider = document.getElementById('break-slider');
+        const workDisplay = document.getElementById('work-display');
+        const breakDisplay = document.getElementById('break-display');
+        const resetBtn = document.getElementById('reset-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const themeInputs = document.querySelectorAll('input[name="theme"]');
+
+        // === CONSTANTS ===
+        const RING_CIRCUMFERENCE = 2 * Math.PI * 130; // r=130
+        const LONG_BREAK_AFTER = 4;
+        const LONG_BREAK_MINUTES = 15;
+        const TRANSITION_SECONDS = 10;
+
+        // === STATE ===
+        let isRunning = false;
+        let isInTransition = false;
+        let currentPhase = 'work'; // 'work', 'break', 'long-break', 'transition'
+        let workMinutes = 25;
+        let breakMinutes = 5;
+        let timeRemaining = workMinutes * 60; // seconds
+        let totalTime = workMinutes * 60;
+        let completedSessions = 0;
+        let intervalId = null;
+        let audioCtx = null;
+        let nextPhase = null; // For transition
+
+        // === INIT ===
+        progressRing.style.strokeDasharray = RING_CIRCUMFERENCE;
+        progressRing.style.strokeDashoffset = 0;
+        loadSettings();
+        updateDisplay();
+
+        // === THEME ===
+        function setTheme(mode) {
+            const html = document.documentElement;
+            if (mode === 'system') {
+                const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } else {
+                html.setAttribute('data-theme', mode);
+            }
+            localStorage.setItem('mindful-theme', mode);
+        }
+        themeInputs.forEach(i => i.addEventListener('change', e => setTheme(e.target.value)));
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('mindful-theme') || 'system';
+        document.querySelector(`#theme-${savedTheme}`).checked = true;
+        setTheme(savedTheme);
+
+        // === SETTINGS ===
+        function loadSettings() {
+            const savedWork = localStorage.getItem('pomodoro-work');
+            const savedBreak = localStorage.getItem('pomodoro-break');
+            const savedSound = localStorage.getItem('pomodoro-sound');
+            const savedAutoContinue = localStorage.getItem('pomodoro-auto-continue');
+
+            if (savedWork) {
+                workMinutes = parseInt(savedWork);
+                workSlider.value = workMinutes;
+            }
+            if (savedBreak) {
+                breakMinutes = parseInt(savedBreak);
+                breakSlider.value = breakMinutes;
+            }
+            if (savedSound !== null) {
+                soundToggle.checked = savedSound === 'true';
+            }
+            if (savedAutoContinue !== null) {
+                autoContinueToggle.checked = savedAutoContinue === 'true';
+            }
+
+            workDisplay.textContent = workMinutes + ' min';
+            breakDisplay.textContent = breakMinutes + ' min';
+            timeRemaining = workMinutes * 60;
+            totalTime = workMinutes * 60;
+        }
+
+        workSlider.addEventListener('input', (e) => {
+            workMinutes = parseInt(e.target.value);
+            workDisplay.textContent = workMinutes + ' min';
+            localStorage.setItem('pomodoro-work', workMinutes);
+            if (!isRunning && currentPhase === 'work') {
+                timeRemaining = workMinutes * 60;
+                totalTime = workMinutes * 60;
+                updateDisplay();
+            }
+        });
+
+        breakSlider.addEventListener('input', (e) => {
+            breakMinutes = parseInt(e.target.value);
+            breakDisplay.textContent = breakMinutes + ' min';
+            localStorage.setItem('pomodoro-break', breakMinutes);
+            if (!isRunning && currentPhase === 'break') {
+                timeRemaining = breakMinutes * 60;
+                totalTime = breakMinutes * 60;
+                updateDisplay();
+            }
+        });
+
+        soundToggle.addEventListener('change', () => {
+            localStorage.setItem('pomodoro-sound', soundToggle.checked);
+        });
+
+        autoContinueToggle.addEventListener('change', () => {
+            localStorage.setItem('pomodoro-auto-continue', autoContinueToggle.checked);
+        });
+
+        // === AUDIO ===
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playChime() {
+            if (!soundToggle.checked || !audioCtx) return;
+            const t = audioCtx.currentTime;
+
+            // Pleasant completion chime
+            [523.25, 659.25, 783.99].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, t + i * 0.15);
+                gain.gain.setValueAtTime(0, t + i * 0.15);
+                gain.gain.linearRampToValueAtTime(0.3, t + i * 0.15 + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.15 + 1.5);
+                osc.start(t + i * 0.15);
+                osc.stop(t + i * 0.15 + 1.6);
+            });
+        }
+
+        // === TIMER LOGIC ===
+        timerContainer.addEventListener('click', toggleTimer);
+
+        function toggleTimer() {
+            initAudio();
+
+            // If in transition, skip to next phase immediately
+            if (isInTransition) {
+                clearInterval(intervalId);
+                isInTransition = false;
+                setPhase(nextPhase);
+                startTimer();
+                return;
+            }
+
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            isRunning = true;
+            document.body.classList.remove('paused');
+            actionHint.textContent = 'Tap to pause';
+
+            intervalId = setInterval(() => {
+                timeRemaining--;
+                updateDisplay();
+
+                if (timeRemaining <= 0) {
+                    completePhase();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            document.body.classList.add('paused');
+            actionHint.textContent = 'Tap to resume';
+            clearInterval(intervalId);
+        }
+
+        function completePhase() {
+            clearInterval(intervalId);
+            isRunning = false;
+            playChime();
+
+            // Determine next phase
+            if (currentPhase === 'work') {
+                completedSessions++;
+                if (completedSessions >= LONG_BREAK_AFTER) {
+                    nextPhase = 'long-break';
+                    completedSessions = 0;
+                } else {
+                    nextPhase = 'break';
+                }
+            } else if (currentPhase === 'transition') {
+                // Transition complete, start the next phase
+                setPhase(nextPhase);
+                isInTransition = false;
+                startTimer();
+                return;
+            } else {
+                nextPhase = 'work';
+            }
+
+            // Check if auto-continue is enabled
+            if (autoContinueToggle.checked) {
+                // Start transition countdown
+                isInTransition = true;
+                currentPhase = 'transition';
+                timeRemaining = TRANSITION_SECONDS;
+                totalTime = TRANSITION_SECONDS;
+
+                const nextLabel = nextPhase === 'work' ? 'Focus' :
+                    nextPhase === 'break' ? 'Break' : 'Long Break';
+                phaseLabel.textContent = `Next: ${nextLabel}`;
+                actionHint.textContent = 'Tap to skip';
+                updateDisplay();
+
+                // Start the transition countdown
+                isRunning = true;
+                intervalId = setInterval(() => {
+                    timeRemaining--;
+                    updateDisplay();
+                    if (timeRemaining <= 0) {
+                        completePhase(); // This will trigger the transition -> next phase
+                    }
+                }, 1000);
+            } else {
+                // Manual mode - just set up the next phase
+                setPhase(nextPhase);
+                actionHint.textContent = 'Tap to start';
+                updateDisplay();
+            }
+        }
+
+        function setPhase(phase) {
+            currentPhase = phase;
+            document.body.className = `phase-${phase}`;
+
+            switch (phase) {
+                case 'work':
+                    phaseLabel.textContent = 'Focus';
+                    timeRemaining = workMinutes * 60;
+                    totalTime = workMinutes * 60;
+                    break;
+                case 'break':
+                    phaseLabel.textContent = 'Break';
+                    timeRemaining = breakMinutes * 60;
+                    totalTime = breakMinutes * 60;
+                    break;
+                case 'long-break':
+                    phaseLabel.textContent = 'Long Break';
+                    timeRemaining = LONG_BREAK_MINUTES * 60;
+                    totalTime = LONG_BREAK_MINUTES * 60;
+                    break;
+            }
+        }
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Progress ring
+            const progress = timeRemaining / totalTime;
+            const offset = RING_CIRCUMFERENCE * (1 - progress);
+            progressRing.style.strokeDashoffset = offset;
+
+            // Session count
+            sessionCount.textContent = `Session ${completedSessions + 1} of ${LONG_BREAK_AFTER}`;
+        }
+
+        // === CONTROLS ===
+        resetBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearInterval(intervalId);
+            isRunning = false;
+            completedSessions = 0;
+            setPhase('work');
+            document.body.classList.remove('paused');
+            actionHint.textContent = 'Tap to start';
+            updateDisplay();
+        });
+
+        skipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearInterval(intervalId);
+            isRunning = false;
+
+            if (currentPhase === 'work') {
+                completedSessions++;
+                if (completedSessions >= LONG_BREAK_AFTER) {
+                    setPhase('long-break');
+                    completedSessions = 0;
+                } else {
+                    setPhase('break');
+                }
+            } else {
+                setPhase('work');
+            }
+
+            actionHint.textContent = 'Tap to start';
+            updateDisplay();
+        });
+    </script>
+</body>
+
+</html>

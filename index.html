@@ -4,75 +4,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Breathe</title>
+    <title>Mindful</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <style>
         :root {
-            /* Apple Standard Animation Curve */
             --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
-            --active-green: #34c759;
         }
 
         /* --- THEME DEFINITIONS --- */
 
-        /* 1. Dark Mode (Deep Space) */
+        /* Dark Mode */
         [data-theme="dark"] {
-            /* A subtle radial gradient for depth */
             --bg-gradient: radial-gradient(circle at 50% 120%, #1c3d52, #0f1720 60%, #000000);
-
             --glass-panel: rgba(28, 28, 30, 0.65);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.12);
             --text-primary: #ffffff;
-            --text-secondary: #c7c7cc;
-            --label-shadow: 0 1px 8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(94, 172, 252, 0.25);
+            --text-secondary: #a1a1a6;
+            --text-muted: #6e6e73;
 
-            /* The Orb: Glowing internal light */
-            --orb-bg: radial-gradient(circle at 30% 30%, #5eacfc, #184e68);
-            --orb-shadow: 0 0 60px rgba(50, 150, 255, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(44, 44, 46, 0.6);
+            --card-hover: rgba(58, 58, 60, 0.7);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+            --breathe-accent: #5eacfc;
+            --breathe-glow: rgba(94, 172, 252, 0.25);
+            --pomodoro-accent: #ff6b6b;
+            --pomodoro-glow: rgba(255, 107, 107, 0.25);
 
             --segment-bg: rgba(118, 118, 128, 0.24);
             --segment-pill: #636366;
-            --slider-track: #3a3a3c;
         }
 
-        /* 2. Light Mode (Morning Vapor) */
+        /* Light Mode */
         [data-theme="light"] {
-            /* Soft, airy gradient */
-            --bg-gradient: linear-gradient(135deg, #eef2f3 0%, #d9e4f5 100%);
-
-            --glass-panel: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.4);
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            --glass-panel: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.6);
             --text-primary: #1d1d1f;
-            --text-secondary: #86868b;
+            --text-secondary: #6e6e73;
+            --text-muted: #aeaeb2;
 
-            /* The Orb: Soft porcelain/water look */
-            --orb-bg: linear-gradient(135deg, #ffffff 0%, #c4d6ee 100%);
-            --orb-shadow: 0 20px 50px rgba(166, 185, 214, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-hover: rgba(255, 255, 255, 0.95);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+
+            --breathe-accent: #007aff;
+            --breathe-glow: rgba(0, 122, 255, 0.15);
+            --pomodoro-accent: #ff3b30;
+            --pomodoro-glow: rgba(255, 59, 48, 0.15);
 
             --segment-bg: rgba(118, 118, 128, 0.12);
             --segment-pill: #ffffff;
-            --slider-track: #d1d1d6;
-            --label-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         /* --- LAYOUT --- */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             background: var(--bg-gradient);
             background-size: 200% 200%;
-            /* Subtle drift animation for background */
             animation: bg-drift 20s ease infinite alternate;
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-            overflow: hidden;
+            overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            padding: 40px 20px;
         }
 
         @keyframes bg-drift {
@@ -85,118 +91,159 @@
             }
         }
 
-        /* --- THE ORB (The Interaction) --- */
-        .stage {
-            flex-grow: 1;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        /* Wrapper positions the orb but is NOT the click target */
-        .orb-wrapper {
-            width: 300px;
-            height: 300px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        /* The Orb IS the click target. It scales, so the click area scales. */
-        .orb {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: var(--orb-bg);
-            box-shadow: var(--orb-shadow);
-            transform: scale(1);
-            will-change: transform;
-            cursor: pointer;
-            z-index: 5;
-            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
-            /* Click press feel */
-        }
-
-        /* When user clicks and holds, it shrinks slightly */
-        .orb:active {
-            transform: scale(0.95) !important;
-        }
-
-        /* Breathing Animation */
-        .animate-cycle .orb {
-            animation: breathe-physics 16s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
-        }
-
-        /* Text Layer - Pointer events none so clicks pass through to Orb */
-        .content-layer {
-            position: absolute;
-            z-index: 10;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        /* --- HEADER --- */
+        .header {
             text-align: center;
-            pointer-events: none;
-            width: 100%;
+            margin-bottom: 48px;
         }
 
-        .label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 1rem;
             color: var(--text-secondary);
+            margin: 0;
+            font-weight: 400;
+        }
+
+        /* --- APP CARDS --- */
+        .cards-container {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 700px;
+        }
+
+        .app-card {
+            width: 280px;
+            padding: 32px 28px;
+            border-radius: 24px;
+            background: var(--card-bg);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s var(--ease-spring),
+                box-shadow 0.3s ease,
+                background 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .app-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            background: var(--card-hover);
+        }
+
+        .app-card:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+        /* App Icon */
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .app-icon::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 28px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .app-card:hover .app-icon::before {
+            opacity: 1;
+        }
+
+        /* Breathe Icon */
+        .breathe-icon {
+            background: linear-gradient(135deg, #5eacfc 0%, #3d8bfd 100%);
+            box-shadow: 0 8px 24px var(--breathe-glow);
+        }
+
+        .breathe-icon::before {
+            background: var(--breathe-glow);
+            filter: blur(16px);
+        }
+
+        .breathe-icon svg {
+            width: 44px;
+            height: 44px;
+            fill: white;
+        }
+
+        /* Pomodoro Icon */
+        .pomodoro-icon {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            box-shadow: 0 8px 24px var(--pomodoro-glow);
+        }
+
+        .pomodoro-icon::before {
+            background: var(--pomodoro-glow);
+            filter: blur(16px);
+        }
+
+        .pomodoro-icon svg {
+            width: 44px;
+            height: 44px;
+            fill: white;
+        }
+
+        /* App Info */
+        .app-name {
+            font-size: 1.25rem;
             font-weight: 600;
-            margin-bottom: 5px;
-            text-shadow: var(--label-shadow);
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
         }
 
-        .timer {
-            font-size: 5rem;
-            font-weight: 100;
-            font-variant-numeric: tabular-nums;
-            line-height: 1;
-            letter-spacing: -2px;
-            text-shadow: var(--label-shadow);
+        .app-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin: 0;
         }
 
-        /* --- CONTROL DOCK --- */
-        .dock {
-            width: 85%;
-            max-width: 340px;
-            margin-bottom: 50px;
-            padding: 24px;
-            border-radius: 32px;
+        /* --- THEME SWITCHER --- */
+        .theme-dock {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px;
+            border-radius: 14px;
             background: var(--glass-panel);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
             border: 1px solid var(--glass-border);
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            transition: opacity 0.5s;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
         }
 
-        /* Dim dock when active */
-        body.running .dock {
-            opacity: 0.2;
-            pointer-events: none;
-        }
-
-        body.running .dock:hover {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        /* Row 1: Segmented Control */
         .segmented-control {
             display: flex;
             background: var(--segment-bg);
             padding: 3px;
-            border-radius: 12px;
+            border-radius: 10px;
             position: relative;
             height: 32px;
         }
@@ -207,8 +254,10 @@
 
         .segmented-control label {
             flex: 1;
-            text-align: center;
-            line-height: 32px;
+            min-width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 0.8rem;
             font-weight: 500;
             color: var(--text-secondary);
@@ -224,7 +273,7 @@
             left: 3px;
             width: calc(33.33% - 4px);
             background: var(--segment-pill);
-            border-radius: 9px;
+            border-radius: 8px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s var(--ease-spring);
             z-index: 1;
@@ -248,130 +297,28 @@
             color: var(--text-primary);
         }
 
-
-        /* Row 2: Sound Toggle + Break Slider */
-        .control-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .control-label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        /* iOS Toggle Switch */
-        .ios-toggle {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 30px;
-        }
-
-        .ios-toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--segment-bg);
-            border-radius: 34px;
-            transition: .3s;
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            border-radius: 50%;
-            transition: .3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        input:checked+.toggle-slider {
-            background-color: var(--active-green);
-        }
-
-        input:checked+.toggle-slider:before {
-            transform: translateX(20px);
-        }
-
-        /* Slider */
-        .slider-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
+        /* --- FOOTER --- */
+        .footer {
+            margin-top: 48px;
+            text-align: center;
+            color: var(--text-muted);
             font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-            text-transform: uppercase;
         }
 
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-
-        input[type=range]:focus {
-            outline: none;
-        }
-
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            background: var(--slider-track);
-            border-radius: 2px;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 22px;
-            width: 22px;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            margin-top: -9px;
-        }
-
-        /* --- KEYFRAMES --- */
-        @keyframes breathe-physics {
-            0% {
-                transform: scale(1);
+        /* --- RESPONSIVE --- */
+        @media (max-width: 640px) {
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
             }
 
-            25% {
-                transform: scale(1.35);
+            .app-card {
+                width: 100%;
+                max-width: 320px;
             }
 
-            50% {
-                transform: scale(1.35);
-            }
-
-            75% {
-                transform: scale(1);
-            }
-
-            100% {
-                transform: scale(1);
+            .header h1 {
+                font-size: 2rem;
             }
         }
     </style>
@@ -379,19 +326,39 @@
 
 <body>
 
-    <div class="stage">
-        <div class="orb-wrapper">
-            <div class="orb" id="orb"></div>
+    <header class="header">
+        <h1>Mindful</h1>
+        <p>Choose your focus</p>
+    </header>
 
-            <div class="content-layer">
-                <div class="label" id="instruction-text">Relax & Breathe</div>
-                <div class="timer" id="timer-text">Start</div>
+    <main class="cards-container">
+        <a href="breathe.html" class="app-card">
+            <div class="app-icon breathe-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="white" stroke-width="1.5" opacity="0.4" />
+                    <circle cx="12" cy="12" r="6" fill="none" stroke="white" stroke-width="1.5" opacity="0.7" />
+                    <circle cx="12" cy="12" r="2.5" fill="white" />
+                </svg>
             </div>
-        </div>
-    </div>
+            <div class="app-name">Breathe</div>
+            <p class="app-description">Box breathing exercises for relaxation and focus</p>
+        </a>
 
-    <div class="dock">
+        <a href="pomodoro.html" class="app-card">
+            <div class="app-icon pomodoro-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="13" r="9" fill="none" stroke="white" stroke-width="1.5" />
+                    <path d="M12 7v6l4 2" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                    <path d="M9 2h6" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                    <path d="M12 2v2" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+            </div>
+            <div class="app-name">Pomodoro</div>
+            <p class="app-description">Focused work sessions with timed breaks</p>
+        </a>
+    </main>
 
+    <div class="theme-dock">
         <div class="segmented-control">
             <input type="radio" name="theme" id="theme-system" value="system" checked>
             <label for="theme-system">System</label>
@@ -401,49 +368,12 @@
             <label for="theme-dark">Dark</label>
             <div class="segment-pill"></div>
         </div>
-
-        <div class="control-row">
-            <span class="control-label">Sound</span>
-            <label class="ios-toggle">
-                <input type="checkbox" id="sound-toggle" checked>
-                <span class="toggle-slider"></span>
-            </label>
-        </div>
-
-        <div class="slider-wrapper">
-            <div class="slider-header">
-                <span>Break</span>
-                <span id="break-display">None</span>
-            </div>
-            <input type="range" id="break-slider" min="0" max="4" step="1" value="0">
-        </div>
     </div>
 
     <script>
-        // DOM
-        const orb = document.getElementById('orb'); // Specific click target
-        const orbWrapper = orb.parentElement;
-        const instructionText = document.getElementById('instruction-text');
-        const timerText = document.getElementById('timer-text');
-        const soundToggle = document.getElementById('sound-toggle');
-        const breakSlider = document.getElementById('break-slider');
-        const breakDisplay = document.getElementById('break-display');
+        // Theme Logic
         const themeInputs = document.querySelectorAll('input[name="theme"]');
 
-        // STATE
-        let isRunning = false;
-        let countdownId;
-        let pendingTimeouts = []; // Array to track ALL pending timeouts
-        let audioCtx;
-        const phases = [
-            { text: "Inhale", time: 4000 },
-            { text: "Hold", time: 4000 },
-            { text: "Exhale", time: 4000 },
-            { text: "Hold", time: 4000 }
-        ];
-        const breakMap = [0, 5, 10, 20, 30];
-
-        // --- 1. Theme Logic ---
         function setTheme(mode) {
             const html = document.documentElement;
             if (mode === 'system') {
@@ -452,145 +382,24 @@
             } else {
                 html.setAttribute('data-theme', mode);
             }
+            localStorage.setItem('mindful-theme', mode);
         }
+
         themeInputs.forEach(i => i.addEventListener('change', e => setTheme(e.target.value)));
-        setTheme('system');
 
-        // --- 2. Break Slider Logic ---
-        breakSlider.addEventListener('input', (e) => {
-            const sec = breakMap[e.target.value];
-            breakDisplay.innerText = sec === 0 ? "None" : sec + "s";
+        // Load saved theme
+        const savedTheme = localStorage.getItem('mindful-theme') || 'system';
+        document.querySelector(`#theme-${savedTheme}`).checked = true;
+        setTheme(savedTheme);
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            const currentTheme = localStorage.getItem('mindful-theme') || 'system';
+            if (currentTheme === 'system') {
+                setTheme('system');
+            }
         });
-
-        // --- 3. Audio Logic ---
-        function initAudio() {
-            if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
-            }
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function playTone(type) {
-            if (!soundToggle.checked || !audioCtx) return;
-            const t = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            // Using slightly different frequencies based on theme for extra polish?
-            // Let's stick to a universal calming tone.
-            if (type === 'bell') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(180, t); // Deeper, more grounding
-                gain.gain.setValueAtTime(0, t);
-                gain.gain.linearRampToValueAtTime(0.55, t + 0.6);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 4.5);
-                osc.start(t);
-                osc.stop(t + 4.6);
-            } else if (type === 'end') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, t);
-                gain.gain.setValueAtTime(0, t);
-                gain.gain.linearRampToValueAtTime(0.25, t + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
-                osc.start(t);
-                osc.stop(t + 2.1);
-            }
-        }
-
-        // --- 4. Core Logic ---
-        orb.addEventListener('click', toggleSession); // Listener on the ORB itself
-
-        function toggleSession() {
-            if (isRunning) stopSession();
-            else startSession();
-        }
-
-        function startSession() {
-            initAudio();
-            isRunning = true;
-            document.body.classList.add('running');
-            instructionText.innerText = "Prepare";
-            timerText.innerText = "";
-
-            const id = setTimeout(() => { if (isRunning) runCycle(); }, 1000);
-            pendingTimeouts.push(id);
-        }
-
-        function stopSession() {
-            isRunning = false;
-            document.body.classList.remove('running');
-            instructionText.innerText = "Relax & Breathe";
-            timerText.innerText = "Start";
-
-            // Clear ALL pending timeouts
-            pendingTimeouts.forEach(id => clearTimeout(id));
-            pendingTimeouts = [];
-            clearInterval(countdownId);
-
-            // CSS Animation Reset
-            orbWrapper.classList.remove('animate-cycle');
-            void orbWrapper.offsetWidth;
-
-            playTone('end');
-        }
-
-        function runCycle() {
-            if (!isRunning) return;
-
-            // Trigger visual
-            orbWrapper.classList.remove('animate-cycle');
-            void orbWrapper.offsetWidth;
-            orbWrapper.classList.add('animate-cycle');
-
-            let delay = 0;
-            phases.forEach((phase) => {
-                const id = setTimeout(() => {
-                    if (!isRunning) return;
-                    instructionText.innerText = phase.text;
-                    startCountdown(4);
-                    playTone('bell');
-                }, delay);
-                pendingTimeouts.push(id);
-                delay += phase.time;
-            });
-
-            // End of cycle / Break logic
-            const endId = setTimeout(() => {
-                if (!isRunning) return;
-                const breakTime = breakMap[breakSlider.value];
-                if (breakTime > 0) handleBreak(breakTime);
-                else runCycle();
-            }, 16000);
-            pendingTimeouts.push(endId);
-        }
-
-        function handleBreak(seconds) {
-            orbWrapper.classList.remove('animate-cycle'); // Stop expanding
-            instructionText.innerText = "Relax";
-            startCountdown(seconds);
-
-            const id = setTimeout(() => {
-                if (!isRunning) return;
-                runCycle();
-            }, seconds * 1000);
-            pendingTimeouts.push(id);
-        }
-
-        function startCountdown(duration) {
-            let timeLeft = duration;
-            timerText.innerText = timeLeft;
-            if (countdownId) clearInterval(countdownId);
-            countdownId = setInterval(() => {
-                timeLeft--;
-                if (timeLeft > 0) timerText.innerText = timeLeft;
-                else clearInterval(countdownId);
-            }, 1000);
-        }
     </script>
 </body>
-
 
 </html>
