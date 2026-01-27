@@ -1,23 +1,43 @@
-# Breathe
+# Mindful
 
-A minimalist web application for the Box Breathing (4-4-4-4) technique.
+A collection of minimalist wellness web apps with an Apple-inspired design.
 
-## 📱 Mobile Experience
+## ✨ Features
 
-To use this as a native-feeling app on your phone:
+### 🌬️ Breathe
+Box Breathing (4-4-4-4) technique with animated visual guidance.
 
-1.  Navigate to your deployed site link on your phone.
-2.  **iOS (Safari):** Tap Share → "Add to Home Screen".
-3.  **Android (Chrome):** Tap Menu (3 dots) → "Install App" or "Add to Home Screen".
+### 🍅 Pomodoro
+Focus timer with work/break intervals and session tracking.
 
-## 🛠 Customization
+### 📝 Notes
+Plain text editor with auto-save, word count, and spellcheck.
 
-You can adjust the breathing timing by editing the `phases` array inside the `<script>` tag:
+### 🎧 Sounds
+Ambient sound generator with 6 high-quality procedural sounds:
+- **White Noise** – Full spectrum static
+- **Pink Noise** – Balanced, natural tone
+- **Brown Noise** – Deep, low-frequency rumble
+- **Rain** – Layered rainfall with droplets
+- **Ocean** – Multi-layered waves with foam
+- **Wind** – Gusting breeze with subtle whistles
 
-```javascript
-const phases = [
-    { text: "Inhale", time: 4000 }, // Time in milliseconds
-    { text: "Hold", time: 4000 },
-    { text: "Exhale", time: 4000 },
-    { text: "Hold", time: 4000 }
-];
+## 📱 Install as App
+
+1. Open the site on your phone
+2. **iOS (Safari):** Tap Share → "Add to Home Screen"
+3. **Android (Chrome):** Tap Menu → "Install App"
+
+## 🎨 Design
+
+- Dark/Light/System theme support
+- Glassmorphism effects
+- Smooth animations
+- Responsive layout
+
+## 🛠️ Tech
+
+- Pure HTML, CSS, JavaScript
+- No frameworks or dependencies
+- Web Audio API for procedural sounds
+- LocalStorage for persistence

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f7fa">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Notes</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <style>
+        :root {
+            --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* --- THEME DEFINITIONS --- */
+
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --bg-gradient: radial-gradient(ellipse at 50% 0%, #1a2a3a 0%, #0d1117 50%, #000000 100%);
+            --glass-panel: rgba(30, 30, 32, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-border-focus: rgba(255, 255, 255, 0.15);
+            --text-primary: #f5f5f7;
+            --text-secondary: rgba(255, 255, 255, 0.55);
+            --text-muted: rgba(255, 255, 255, 0.35);
+
+            --editor-bg: rgba(0, 0, 0, 0.3);
+            --editor-border: rgba(255, 255, 255, 0.06);
+            --editor-border-focus: rgba(255, 149, 0, 0.4);
+            --editor-glow: 0 0 0 1px rgba(255, 149, 0, 0.2), 0 8px 40px rgba(255, 149, 0, 0.08);
+            --placeholder-color: rgba(255, 255, 255, 0.25);
+            --caret-color: #ff9f0a;
+
+            --segment-bg: rgba(255, 255, 255, 0.06);
+            --segment-pill: rgba(255, 255, 255, 0.12);
+            --segment-pill-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+            --btn-bg: rgba(255, 255, 255, 0.06);
+            --btn-hover: rgba(255, 255, 255, 0.1);
+            --btn-active: rgba(255, 255, 255, 0.04);
+
+            --divider: rgba(255, 255, 255, 0.06);
+            --shadow-ambient: 0 24px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Light Mode */
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(180deg, #f2f2f7 0%, #e5e5ea 100%);
+            --glass-panel: rgba(255, 255, 255, 0.72);
+            --glass-border: rgba(0, 0, 0, 0.04);
+            --glass-border-focus: rgba(0, 0, 0, 0.08);
+            --text-primary: #1d1d1f;
+            --text-secondary: rgba(0, 0, 0, 0.5);
+            --text-muted: rgba(0, 0, 0, 0.3);
+
+            --editor-bg: rgba(255, 255, 255, 0.8);
+            --editor-border: rgba(0, 0, 0, 0.06);
+            --editor-border-focus: rgba(255, 149, 0, 0.5);
+            --editor-glow: 0 0 0 3px rgba(255, 149, 0, 0.15), 0 8px 32px rgba(0, 0, 0, 0.08);
+            --placeholder-color: rgba(0, 0, 0, 0.25);
+            --caret-color: #ff9500;
+
+            --segment-bg: rgba(0, 0, 0, 0.04);
+            --segment-pill: #ffffff;
+            --segment-pill-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+            --btn-bg: rgba(0, 0, 0, 0.04);
+            --btn-hover: rgba(0, 0, 0, 0.06);
+            --btn-active: rgba(0, 0, 0, 0.08);
+
+            --divider: rgba(0, 0, 0, 0.06);
+            --shadow-ambient: 0 24px 80px rgba(0, 0, 0, 0.12);
+        }
+
+        /* --- BASE RESET --- */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%;
+            background-color: #f2f2f7;
+            transition: background-color 0.4s ease;
+        }
+
+        html[data-theme="dark"] {
+            background-color: #000000;
+        }
+
+        body {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 720px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 72px 24px 24px;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 4px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .clear-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--btn-bg);
+            border: 1px solid var(--glass-border);
+            padding: 8px 14px;
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-spring);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .clear-btn:hover {
+            background: var(--btn-hover);
+            color: var(--text-primary);
+        }
+
+        .clear-btn:active {
+            transform: scale(0.96);
+            background: var(--btn-active);
+        }
+
+        .clear-btn svg {
+            width: 14px;
+            height: 14px;
+            opacity: 0.7;
+        }
+
+        /* --- EDITOR CARD --- */
+        .editor-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--editor-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--editor-border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-ambient);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .editor-card.focused {
+            border-color: var(--editor-border-focus);
+            box-shadow: var(--editor-glow), var(--shadow-ambient);
+        }
+
+        /* --- EDITOR AREA --- */
+        .editor-area {
+            flex: 1;
+            position: relative;
+            min-height: 400px;
+        }
+
+        #editor {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            padding: 28px 32px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1.65;
+            letter-spacing: -0.01em;
+            resize: none;
+            outline: none;
+            caret-color: var(--caret-color);
+            overflow-y: auto;
+            /* Enable scrolling within the editor */
+        }
+
+        #editor::placeholder {
+            color: var(--placeholder-color);
+            font-weight: 400;
+        }
+
+        /* Scrollbar styling */
+        #editor::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #editor::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #editor::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 4px;
+        }
+
+        #editor::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* --- STATS BAR --- */
+        .stats-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+            border-top: 1px solid var(--divider);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .stats-bar span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* --- CONTROL DOCK --- */
+        .dock {
+            margin-top: 20px;
+            padding: 8px;
+            border-radius: 16px;
+            background: var(--glass-panel);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Segmented Control */
+        .segmented-control {
+            display: flex;
+            background: var(--segment-bg);
+            padding: 3px;
+            border-radius: 10px;
+            position: relative;
+            height: 36px;
+        }
+
+        .segmented-control input {
+            display: none;
+        }
+
+        .segmented-control label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.25s ease;
+            border-radius: 8px;
+        }
+
+        .segmented-control label:hover {
+            color: var(--text-primary);
+        }
+
+        .segment-pill {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            left: 3px;
+            width: calc(33.333% - 4px);
+            background: var(--segment-pill);
+            border-radius: 8px;
+            box-shadow: var(--segment-pill-shadow);
+            transition: transform 0.3s var(--ease-spring);
+            z-index: 1;
+        }
+
+        #theme-system:checked~.segment-pill {
+            transform: translateX(0);
+        }
+
+        #theme-light:checked~.segment-pill {
+            transform: translateX(calc(100% + 2px));
+        }
+
+        #theme-dark:checked~.segment-pill {
+            transform: translateX(calc(200% + 4px));
+        }
+
+        #theme-system:checked+label,
+        #theme-light:checked+label,
+        #theme-dark:checked+label {
+            color: var(--text-primary);
+        }
+
+        /* --- BACK BUTTON --- */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--glass-panel);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: transform 0.2s var(--ease-spring), opacity 0.3s ease, background 0.2s ease;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .back-btn:hover {
+            transform: scale(1.08);
+            background: var(--btn-hover);
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+        }
+
+        .back-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-primary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 600px) {
+            .container {
+                padding: 64px 16px 16px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            #editor {
+                padding: 20px 20px;
+                font-size: 16px;
+            }
+
+            .stats-bar {
+                padding: 12px 20px;
+            }
+
+            .editor-card {
+                border-radius: 16px;
+            }
+
+            .dock {
+                border-radius: 14px;
+            }
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .editor-card {
+            animation: fadeIn 0.5s var(--ease-out-expo) forwards;
+        }
+
+        .dock {
+            animation: fadeIn 0.5s var(--ease-out-expo) 0.1s forwards;
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--glass-panel);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 300px;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(10px);
+            transition: transform 0.25s var(--ease-out-expo);
+        }
+
+        .modal-overlay.visible .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-content {
+            padding: 24px 20px 20px;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .modal-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            border-top: 1px solid var(--divider);
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px 16px;
+            border: none;
+            background: transparent;
+            font-size: 17px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            font-family: inherit;
+        }
+
+        .modal-btn:first-child {
+            border-right: 1px solid var(--divider);
+        }
+
+        .modal-btn-cancel {
+            color: #007aff;
+            font-weight: 500;
+        }
+
+        .modal-btn-cancel:hover {
+            background: var(--btn-hover);
+        }
+
+        .modal-btn-destructive {
+            color: #ff3b30;
+            font-weight: 600;
+        }
+
+        .modal-btn-destructive:hover {
+            background: rgba(255, 59, 48, 0.1);
+        }
+
+        .modal-btn:active {
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="back-btn" title="Back to Hub">
+        <svg viewBox="0 0 24 24">
+            <path d="M15 18l-6-6 6-6" />
+        </svg>
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <h1>Notes</h1>
+            <button class="clear-btn" id="clear-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14" />
+                </svg>
+                Clear
+            </button>
+        </div>
+
+        <div class="editor-card" id="editor-card">
+            <div class="editor-area">
+                <textarea id="editor" placeholder="Start writing..." spellcheck="true" lang="en" autocomplete="off"
+                    autocorrect="on" autocapitalize="sentences"></textarea>
+            </div>
+            <div class="stats-bar">
+                <span id="word-count">0 words</span>
+                <span id="char-count">0 characters</span>
+            </div>
+        </div>
+
+        <div class="dock">
+            <div class="segmented-control">
+                <input type="radio" name="theme" id="theme-system" value="system" checked>
+                <label for="theme-system">System</label>
+                <input type="radio" name="theme" id="theme-light" value="light">
+                <label for="theme-light">Light</label>
+                <input type="radio" name="theme" id="theme-dark" value="dark">
+                <label for="theme-dark">Dark</label>
+                <div class="segment-pill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-title">Clear Notes?</div>
+                <div class="modal-message">This action cannot be undone.
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="modal-cancel">Cancel</button>
+                <button class="modal-btn modal-btn-destructive" id="modal-confirm">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === DOM ===
+        const editor = document.getElementById('editor');
+        const editorCard = document.getElementById('editor-card');
+        const wordCount = document.getElementById('word-count');
+        const charCount = document.getElementById('char-count');
+        const clearBtn = document.getElementById('clear-btn');
+        const themeInputs = document.querySelectorAll('input[name="theme"]');
+
+        // === THEME ===
+        function setTheme(mode) {
+            const html = document.documentElement;
+            if (mode === 'system') {
+                const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } else {
+                html.setAttribute('data-theme', mode);
+            }
+            localStorage.setItem('mindful-theme', mode);
+
+            const themeColor = document.querySelector('meta[name="theme-color"]');
+            if (themeColor) {
+                themeColor.content = (html.getAttribute('data-theme') === 'dark') ? '#000000' : '#f2f2f7';
+            }
+        }
+
+        themeInputs.forEach(i => i.addEventListener('change', e => setTheme(e.target.value)));
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('mindful-theme') || 'system';
+        document.querySelector(`#theme-${savedTheme}`).checked = true;
+        setTheme(savedTheme);
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if ((localStorage.getItem('mindful-theme') || 'system') === 'system') {
+                setTheme('system');
+            }
+        });
+
+        // === PLAIN TEXT PASTE ===
+        editor.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+
+            // Use insertText for better undo support
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const before = editor.value.substring(0, start);
+            const after = editor.value.substring(end);
+
+            editor.value = before + text + after;
+            editor.selectionStart = editor.selectionEnd = start + text.length;
+
+            editor.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        // === COPY AS PLAIN TEXT ===
+        editor.addEventListener('copy', (e) => {
+            e.preventDefault();
+            const selectedText = editor.value.substring(editor.selectionStart, editor.selectionEnd);
+            e.clipboardData.setData('text/plain', selectedText);
+        });
+
+        // === STATS ===
+        function updateStats() {
+            const text = editor.value;
+            const chars = text.length;
+            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+
+            charCount.textContent = chars === 1 ? '1 character' : `${chars.toLocaleString()} characters`;
+            wordCount.textContent = words === 1 ? '1 word' : `${words.toLocaleString()} words`;
+        }
+
+        // === AUTO-SAVE ===
+        function saveContent() {
+            localStorage.setItem('mindful-notes', editor.value);
+        }
+
+        function loadContent() {
+            const saved = localStorage.getItem('mindful-notes');
+            if (saved !== null) {
+                editor.value = saved;
+                updateStats();
+            }
+        }
+
+        editor.addEventListener('focus', () => {
+            editorCard.classList.add('focused');
+        });
+
+        editor.addEventListener('blur', () => {
+            editorCard.classList.remove('focused');
+        });
+
+        editor.addEventListener('input', () => {
+            updateStats();
+            saveContent();
+        });
+
+        // === MODAL ===
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalConfirm = document.getElementById('modal-confirm');
+
+        function showModal() {
+            modalOverlay.classList.add('visible');
+        }
+
+        function hideModal() {
+            modalOverlay.classList.remove('visible');
+        }
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) hideModal();
+        });
+
+        modalCancel.addEventListener('click', hideModal);
+
+        modalConfirm.addEventListener('click', () => {
+            editor.value = '';
+            updateStats();
+            saveContent();
+            hideModal();
+            editor.focus();
+        });
+
+        // === CLEAR BUTTON ===
+        clearBtn.addEventListener('click', () => {
+            if (editor.value.trim() === '') {
+                // Nothing to clear
+                return;
+            }
+            showModal();
+        });
+
+        // === INIT ===
+        loadContent();
+
+        // Force spellcheck activation by briefly focusing
+        setTimeout(() => {
+            if (document.activeElement !== editor) {
+                const scrollPos = window.scrollY;
+                editor.focus();
+                editor.blur();
+                window.scrollTo(0, scrollPos);
+            }
+        }, 100);
+    </script>
+</body>
+
+</html>

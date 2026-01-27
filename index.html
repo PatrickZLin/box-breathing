@@ -35,6 +35,10 @@
             --breathe-glow: rgba(94, 172, 252, 0.25);
             --pomodoro-accent: #ff6b6b;
             --pomodoro-glow: rgba(255, 107, 107, 0.25);
+            --notes-accent: #ff9500;
+            --notes-glow: rgba(255, 149, 0, 0.25);
+            --sounds-accent: #af52de;
+            --sounds-glow: rgba(175, 82, 222, 0.25);
 
             --segment-bg: rgba(118, 118, 128, 0.24);
             --segment-pill: #636366;
@@ -57,6 +61,10 @@
             --breathe-glow: rgba(0, 122, 255, 0.15);
             --pomodoro-accent: #ff3b30;
             --pomodoro-glow: rgba(255, 59, 48, 0.15);
+            --notes-accent: #ff9500;
+            --notes-glow: rgba(255, 149, 0, 0.15);
+            --sounds-accent: #af52de;
+            --sounds-glow: rgba(175, 82, 222, 0.15);
 
             --segment-bg: rgba(118, 118, 128, 0.12);
             --segment-pill: #ffffff;
@@ -226,6 +234,38 @@
             fill: white;
         }
 
+        /* Notes Icon */
+        .notes-icon {
+            background: linear-gradient(135deg, #ffb347 0%, #ff9500 100%);
+            box-shadow: 0 8px 24px rgba(255, 149, 0, 0.25);
+        }
+
+        .notes-icon::before {
+            background: rgba(255, 149, 0, 0.25);
+            filter: blur(16px);
+        }
+
+        .notes-icon svg {
+            width: 44px;
+            height: 44px;
+        }
+
+        /* Sounds Icon */
+        .sounds-icon {
+            background: linear-gradient(135deg, #bf5af2 0%, #9945d4 100%);
+            box-shadow: 0 8px 24px rgba(175, 82, 222, 0.25);
+        }
+
+        .sounds-icon::before {
+            background: rgba(175, 82, 222, 0.25);
+            filter: blur(16px);
+        }
+
+        .sounds-icon svg {
+            width: 44px;
+            height: 44px;
+        }
+
         /* App Info */
         .app-name {
             font-size: 1.25rem;
@@ -374,6 +414,33 @@
             </div>
             <div class="app-name">Pomodoro</div>
             <p class="app-description">Focused work sessions with timed breaks</p>
+        </a>
+
+        <a href="notes.html" class="app-card">
+            <div class="app-icon notes-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="none" stroke="white"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M14 2v6h6" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M16 13H8" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                    <path d="M16 17H8" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                    <path d="M10 9H8" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+            </div>
+            <div class="app-name">Notes</div>
+            <p class="app-description">Distraction-free plain text editing</p>
+        </a>
+
+        <a href="sounds.html" class="app-card">
+            <div class="app-icon sounds-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 10v4M7 7v10M11 4v16M15 7v10M19 10v4" stroke="white" stroke-width="2"
+                        stroke-linecap="round" />
+                </svg>
+            </div>
+            <div class="app-name">Sounds</div>
+            <p class="app-description">Ambient noise for focus & relaxation</p>
         </a>
     </main>
 

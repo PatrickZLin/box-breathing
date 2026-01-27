@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f2f2f7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Sounds</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <style>
+        :root {
+            --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --accent: #bf5af2;
+            --accent-light: #e040fb;
+            --accent-glow: rgba(191, 90, 242, 0.35);
+        }
+
+        /* --- THEME DEFINITIONS --- */
+
+        [data-theme="dark"] {
+            --bg-gradient: radial-gradient(ellipse at 50% 0%, #2a1a3a 0%, #0d1117 50%, #000000 100%);
+            --glass-panel: rgba(28, 28, 30, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f5f5f7;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --text-muted: rgba(255, 255, 255, 0.4);
+
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-bg-hover: rgba(255, 255, 255, 0.08);
+            --card-bg-active: rgba(191, 90, 242, 0.2);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-border-active: rgba(191, 90, 242, 0.6);
+            --card-glow: 0 0 30px rgba(191, 90, 242, 0.3);
+
+            --segment-bg: rgba(255, 255, 255, 0.06);
+            --segment-pill: rgba(255, 255, 255, 0.12);
+            --segment-pill-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+
+            --slider-track: rgba(255, 255, 255, 0.12);
+            --slider-fill: var(--accent);
+
+            --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(180deg, #f5f5f7 0%, #e8e8ed 100%);
+            --glass-panel: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.06);
+            --text-primary: #1d1d1f;
+            --text-secondary: rgba(0, 0, 0, 0.55);
+            --text-muted: rgba(0, 0, 0, 0.35);
+
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-bg-hover: rgba(255, 255, 255, 0.9);
+            --card-bg-active: rgba(191, 90, 242, 0.15);
+            --card-border: rgba(0, 0, 0, 0.06);
+            --card-border-active: rgba(191, 90, 242, 0.5);
+            --card-glow: 0 0 30px rgba(191, 90, 242, 0.2);
+
+            --segment-bg: rgba(0, 0, 0, 0.05);
+            --segment-pill: #ffffff;
+            --segment-pill-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+
+            --slider-track: rgba(0, 0, 0, 0.1);
+            --slider-fill: var(--accent);
+
+            --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- BASE --- */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%;
+            background-color: #f5f5f7;
+            transition: background-color 0.4s ease;
+        }
+
+        html[data-theme="dark"] {
+            background-color: #000000;
+        }
+
+        body {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-tap-highlight-color: transparent;
+            padding: 80px 24px 24px;
+        }
+
+        /* --- CONTAINER --- */
+        .container {
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* --- SOUND GRID --- */
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .sound-card {
+            aspect-ratio: 1;
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: transform 0.2s var(--ease-spring), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .sound-card:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: var(--card-bg-hover);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .sound-card:active {
+            transform: scale(0.97);
+        }
+
+        .sound-card.playing {
+            background: var(--card-bg-active);
+            border-color: var(--card-border-active);
+            box-shadow: var(--card-glow), var(--shadow-elevated);
+        }
+
+        .sound-card .icon {
+            font-size: 36px;
+            transition: transform 0.3s var(--ease-spring);
+        }
+
+        .sound-card:hover .icon {
+            transform: scale(1.1);
+        }
+
+        .sound-card.playing .icon {
+            animation: gentle-bounce 1.5s ease-in-out infinite;
+            animation-delay: var(--sync-delay, 0s);
+        }
+
+        @keyframes gentle-bounce {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.08);
+            }
+        }
+
+        .sound-card .label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: -0.2px;
+        }
+
+        .sound-card.playing .label {
+            color: var(--accent);
+        }
+
+        /* --- CONTROLS PANEL --- */
+        .controls-panel {
+            background: var(--glass-panel);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .control-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* --- VOLUME SLIDER --- */
+        .slider-container {
+            position: relative;
+            height: 8px;
+        }
+
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--slider-track);
+            outline: none;
+            position: relative;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.04);
+            transition: transform 0.15s var(--ease-spring), box-shadow 0.15s ease;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
+        }
+
+        .volume-slider::-webkit-slider-thumb:active {
+            transform: scale(0.95);
+        }
+
+        /* --- TIMER BUTTONS --- */
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .timer-btn {
+            padding: 12px 4px;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-spring);
+            font-family: inherit;
+        }
+
+        .timer-btn:hover {
+            background: var(--card-bg-hover);
+            transform: translateY(-1px);
+        }
+
+        .timer-btn:active {
+            transform: scale(0.95);
+        }
+
+        .timer-btn.active {
+            background: var(--card-bg-active);
+            border-color: var(--card-border-active);
+            color: var(--accent);
+        }
+
+        .timer-display {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        .timer-display:empty {
+            display: none;
+        }
+
+        /* --- THEME DOCK --- */
+        .dock {
+            padding: 6px;
+            border-radius: 18px;
+            background: var(--glass-panel);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .segmented-control {
+            display: flex;
+            background: var(--segment-bg);
+            padding: 3px;
+            border-radius: 12px;
+            position: relative;
+            height: 36px;
+        }
+
+        .segmented-control input {
+            display: none;
+        }
+
+        .segmented-control label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.25s ease;
+            border-radius: 10px;
+        }
+
+        .segmented-control label:hover {
+            color: var(--text-primary);
+        }
+
+        .segment-pill {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            left: 3px;
+            width: calc(33.333% - 4px);
+            background: var(--segment-pill);
+            border-radius: 10px;
+            box-shadow: var(--segment-pill-shadow);
+            transition: transform 0.3s var(--ease-spring);
+            z-index: 1;
+        }
+
+        #theme-system:checked~.segment-pill {
+            transform: translateX(0);
+        }
+
+        #theme-light:checked~.segment-pill {
+            transform: translateX(calc(100% + 2px));
+        }
+
+        #theme-dark:checked~.segment-pill {
+            transform: translateX(calc(200% + 4px));
+        }
+
+        #theme-system:checked+label,
+        #theme-light:checked+label,
+        #theme-dark:checked+label {
+            color: var(--text-primary);
+        }
+
+        /* --- BACK BUTTON --- */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--glass-panel);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s var(--ease-spring);
+            z-index: 100;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .back-btn:hover {
+            transform: scale(1.08);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+        }
+
+        .back-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-primary);
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 380px) {
+            .container {
+                gap: 20px;
+            }
+
+            .sound-grid {
+                gap: 12px;
+            }
+
+            .sound-card {
+                border-radius: 20px;
+            }
+
+            .sound-card .icon {
+                font-size: 30px;
+            }
+
+            .sound-card .label {
+                font-size: 12px;
+            }
+
+            .controls-panel {
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            .timer-grid {
+                gap: 6px;
+            }
+
+            .timer-btn {
+                padding: 10px 2px;
+                font-size: 12px;
+            }
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sound-grid {
+            animation: fadeIn 0.4s var(--ease-out-expo) forwards;
+        }
+
+        .controls-panel {
+            animation: fadeIn 0.4s var(--ease-out-expo) 0.1s forwards;
+            opacity: 0;
+        }
+
+        .dock {
+            animation: fadeIn 0.4s var(--ease-out-expo) 0.2s forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="back-btn" title="Back to Hub">
+        <svg viewBox="0 0 24 24">
+            <path d="M15 18l-6-6 6-6" />
+        </svg>
+    </a>
+
+    <div class="container">
+        <div class="sound-grid" id="sound-grid">
+            <div class="sound-card" data-sound="white">
+                <span class="icon">🌫️</span>
+                <span class="label">White</span>
+            </div>
+            <div class="sound-card" data-sound="pink">
+                <span class="icon">🌸</span>
+                <span class="label">Pink</span>
+            </div>
+            <div class="sound-card" data-sound="brown">
+                <span class="icon">🪵</span>
+                <span class="label">Brown</span>
+            </div>
+            <div class="sound-card" data-sound="rain">
+                <span class="icon">🌧️</span>
+                <span class="label">Rain</span>
+            </div>
+            <div class="sound-card" data-sound="ocean">
+                <span class="icon">🌊</span>
+                <span class="label">Ocean</span>
+            </div>
+            <div class="sound-card" data-sound="wind">
+                <span class="icon">💨</span>
+                <span class="label">Wind</span>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="control-section">
+                <div class="control-header">
+                    <span class="control-label">Volume</span>
+                    <span class="control-value" id="volume-value">50%</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="50" step="5">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="control-header">
+                    <span class="control-label">Sleep Timer</span>
+                </div>
+                <div class="timer-grid">
+                    <button class="timer-btn active" data-minutes="0">Off</button>
+                    <button class="timer-btn" data-minutes="15">15m</button>
+                    <button class="timer-btn" data-minutes="30">30m</button>
+                    <button class="timer-btn" data-minutes="60">60m</button>
+                    <button class="timer-btn" data-minutes="90">90m</button>
+                </div>
+                <div class="timer-display" id="timer-display"></div>
+            </div>
+        </div>
+
+        <div class="dock">
+            <div class="segmented-control">
+                <input type="radio" name="theme" id="theme-system" value="system" checked>
+                <label for="theme-system">System</label>
+                <input type="radio" name="theme" id="theme-light" value="light">
+                <label for="theme-light">Light</label>
+                <input type="radio" name="theme" id="theme-dark" value="dark">
+                <label for="theme-dark">Dark</label>
+                <div class="segment-pill"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === DOM ===
+        const soundCards = document.querySelectorAll('.sound-card');
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeValue = document.getElementById('volume-value');
+        const timerBtns = document.querySelectorAll('.timer-btn');
+        const timerDisplay = document.getElementById('timer-display');
+        const themeInputs = document.querySelectorAll('input[name="theme"]');
+
+        // === STATE ===
+        let audioCtx = null;
+        let activeNodes = new Map();
+        let timerMinutes = 0;
+        let timerInterval = null;
+        let timerEndTime = null;
+        let animationStartTime = null; // Shared animation sync time
+        const ANIMATION_DURATION = 1500; // 1.5s in ms
+
+        // === THEME ===
+        function setTheme(mode) {
+            const html = document.documentElement;
+            if (mode === 'system') {
+                const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } else {
+                html.setAttribute('data-theme', mode);
+            }
+            localStorage.setItem('mindful-theme', mode);
+
+            const themeColor = document.querySelector('meta[name="theme-color"]');
+            if (themeColor) {
+                themeColor.content = (html.getAttribute('data-theme') === 'dark') ? '#000000' : '#f5f5f7';
+            }
+        }
+
+        themeInputs.forEach(i => i.addEventListener('change', e => setTheme(e.target.value)));
+        const savedTheme = localStorage.getItem('mindful-theme') || 'system';
+        document.querySelector(`#theme-${savedTheme}`).checked = true;
+        setTheme(savedTheme);
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if ((localStorage.getItem('mindful-theme') || 'system') === 'system') setTheme('system');
+        });
+
+        // === AUDIO ===
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function createNoiseBuffer(type) {
+            // Longer buffer for smoother looping
+            const bufferSize = audioCtx.sampleRate * 4;
+            const buffer = audioCtx.createBuffer(2, bufferSize, audioCtx.sampleRate); // Stereo
+            const dataL = buffer.getChannelData(0);
+            const dataR = buffer.getChannelData(1);
+
+            if (type === 'white') {
+                // Smooth white noise with slight stereo variance
+                for (let i = 0; i < bufferSize; i++) {
+                    const base = Math.random() * 2 - 1;
+                    dataL[i] = base * 0.8;
+                    dataR[i] = (Math.random() * 2 - 1) * 0.8;
+                }
+            } else if (type === 'pink') {
+                // Voss-McCartney algorithm for smoother pink noise
+                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                let c0 = 0, c1 = 0, c2 = 0, c3 = 0, c4 = 0, c5 = 0, c6 = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const whiteL = Math.random() * 2 - 1;
+                    const whiteR = Math.random() * 2 - 1;
+                    // Left channel
+                    b0 = 0.99886 * b0 + whiteL * 0.0555179;
+                    b1 = 0.99332 * b1 + whiteL * 0.0750759;
+                    b2 = 0.96900 * b2 + whiteL * 0.1538520;
+                    b3 = 0.86650 * b3 + whiteL * 0.3104856;
+                    b4 = 0.55000 * b4 + whiteL * 0.5329522;
+                    b5 = -0.7616 * b5 - whiteL * 0.0168980;
+                    dataL[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + whiteL * 0.5362) * 0.15;
+                    b6 = whiteL * 0.115926;
+                    // Right channel (slightly different)
+                    c0 = 0.99886 * c0 + whiteR * 0.0555179;
+                    c1 = 0.99332 * c1 + whiteR * 0.0750759;
+                    c2 = 0.96900 * c2 + whiteR * 0.1538520;
+                    c3 = 0.86650 * c3 + whiteR * 0.3104856;
+                    c4 = 0.55000 * c4 + whiteR * 0.5329522;
+                    c5 = -0.7616 * c5 - whiteR * 0.0168980;
+                    dataR[i] = (c0 + c1 + c2 + c3 + c4 + c5 + c6 + whiteR * 0.5362) * 0.15;
+                    c6 = whiteR * 0.115926;
+                }
+            } else if (type === 'brown') {
+                // Smoother brownian motion with gentle filter
+                let lastL = 0, lastR = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const whiteL = Math.random() * 2 - 1;
+                    const whiteR = Math.random() * 2 - 1;
+                    lastL = (lastL + 0.02 * whiteL) / 1.02;
+                    lastR = (lastR + 0.02 * whiteR) / 1.02;
+                    dataL[i] = lastL * 4;
+                    dataR[i] = lastR * 4;
+                }
+            } else if (type === 'rain') {
+                // Layered rain: base patter + occasional droplets + distant rumble
+                let rumbleL = 0, rumbleR = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const t = i / audioCtx.sampleRate;
+                    // Base rain texture (pink-ish noise)
+                    const baseL = (Math.random() * 2 - 1) * 0.25;
+                    const baseR = (Math.random() * 2 - 1) * 0.25;
+                    // Gentle low-frequency rumble
+                    rumbleL = rumbleL * 0.999 + (Math.random() * 2 - 1) * 0.001;
+                    rumbleR = rumbleR * 0.999 + (Math.random() * 2 - 1) * 0.001;
+                    // Occasional droplet sounds
+                    let dropL = 0, dropR = 0;
+                    if (Math.random() < 0.0008) {
+                        const intensity = Math.random() * 0.6 + 0.2;
+                        dropL = (Math.random() * 2 - 1) * intensity;
+                    }
+                    if (Math.random() < 0.0006) {
+                        const intensity = Math.random() * 0.5 + 0.1;
+                        dropR = (Math.random() * 2 - 1) * intensity;
+                    }
+                    dataL[i] = baseL + rumbleL * 15 + dropL;
+                    dataR[i] = baseR + rumbleR * 15 + dropR;
+                }
+            } else if (type === 'ocean') {
+                // Multi-layered ocean waves with varying frequencies
+                let foamL = 0, foamR = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const t = i / audioCtx.sampleRate;
+                    // Multiple wave layers at different frequencies
+                    const wave1 = (Math.sin(t * 0.08 * Math.PI * 2) + 1) * 0.5;
+                    const wave2 = (Math.sin(t * 0.12 * Math.PI * 2 + 1.5) + 1) * 0.3;
+                    const wave3 = (Math.sin(t * 0.05 * Math.PI * 2 + 3) + 1) * 0.2;
+                    const combined = (wave1 + wave2 + wave3) * 0.3 + 0.15;
+                    // Foamy texture (filtered noise)
+                    foamL = foamL * 0.97 + (Math.random() * 2 - 1) * 0.03;
+                    foamR = foamR * 0.97 + (Math.random() * 2 - 1) * 0.03;
+                    // Combine waves with noise
+                    const noiseL = Math.random() * 2 - 1;
+                    const noiseR = Math.random() * 2 - 1;
+                    dataL[i] = (noiseL * combined + foamL * combined * 2) * 0.9;
+                    dataR[i] = (noiseR * combined + foamR * combined * 2) * 0.9;
+                }
+            } else if (type === 'wind') {
+                // Realistic wind with gusts and whistles
+                let gustL = 0, gustR = 0;
+                let whistlePhase = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const t = i / audioCtx.sampleRate;
+                    // Slow gusting modulation
+                    const gust1 = (Math.sin(t * 0.15 * Math.PI * 2) + 1) * 0.3;
+                    const gust2 = (Math.sin(t * 0.23 * Math.PI * 2 + 2) + 1) * 0.2;
+                    const gust3 = (Math.sin(t * 0.07 * Math.PI * 2 + 5) + 1) * 0.25;
+                    const gustMod = (gust1 + gust2 + gust3) * 0.4 + 0.2;
+                    // Brown noise base
+                    gustL = (gustL + 0.025 * (Math.random() * 2 - 1)) / 1.025;
+                    gustR = (gustR + 0.025 * (Math.random() * 2 - 1)) / 1.025;
+                    // Occasional high whistle
+                    let whistle = 0;
+                    if (gustMod > 0.5) {
+                        whistlePhase += 0.02 + gustMod * 0.01;
+                        whistle = Math.sin(whistlePhase * 50) * (gustMod - 0.5) * 0.15;
+                    }
+                    dataL[i] = gustL * gustMod * 5 + whistle * 0.7;
+                    dataR[i] = gustR * gustMod * 5 + whistle * 0.5;
+                }
+            }
+
+            return buffer;
+        }
+
+        function startSound(soundType) {
+            initAudio();
+
+            const buffer = createNoiseBuffer(soundType);
+            const noiseNode = audioCtx.createBufferSource();
+            noiseNode.buffer = buffer;
+            noiseNode.loop = true;
+
+            const gainNode = audioCtx.createGain();
+            const vol = volumeSlider.value / 100;
+
+            // Two-stage filtering for warmer, smoother sound
+            const lpFilter = audioCtx.createBiquadFilter();
+            lpFilter.type = 'lowpass';
+            lpFilter.frequency.value = soundType === 'brown' ? 400 :
+                soundType === 'pink' ? 2500 :
+                    soundType === 'wind' ? 600 :
+                        soundType === 'rain' ? 3000 :
+                            soundType === 'ocean' ? 1800 : 5000;
+            lpFilter.Q.value = 0.5; // Gentle rolloff
+
+            // High-pass to remove DC offset and rumble
+            const hpFilter = audioCtx.createBiquadFilter();
+            hpFilter.type = 'highpass';
+            hpFilter.frequency.value = soundType === 'brown' ? 20 :
+                soundType === 'ocean' ? 30 : 40;
+            hpFilter.Q.value = 0.5;
+
+            noiseNode.connect(hpFilter);
+            hpFilter.connect(lpFilter);
+            lpFilter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            // Smooth fade in
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.5);
+
+            noiseNode.start();
+
+            activeNodes.set(soundType, { noiseNode, gainNode, lpFilter, hpFilter });
+
+            // Start timer if set and not already running
+            if (timerMinutes > 0 && !timerInterval) {
+                startTimer();
+            }
+        }
+
+        function stopSound(soundType) {
+            const nodes = activeNodes.get(soundType);
+            if (nodes) {
+                const { noiseNode, gainNode } = nodes;
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+                setTimeout(() => {
+                    try { noiseNode.stop(); } catch (e) { }
+                }, 250);
+                activeNodes.delete(soundType);
+            }
+
+            // Clear timer if no sounds playing
+            if (activeNodes.size === 0) {
+                clearTimerInterval();
+                timerDisplay.textContent = '';
+            }
+        }
+
+        function stopAllSounds() {
+            activeNodes.forEach((nodes, type) => {
+                const { noiseNode, gainNode } = nodes;
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+                setTimeout(() => {
+                    try { noiseNode.stop(); } catch (e) { }
+                }, 250);
+            });
+            activeNodes.clear();
+            soundCards.forEach(c => {
+                c.classList.remove('playing');
+                c.querySelector('.icon').style.removeProperty('--sync-delay');
+            });
+            animationStartTime = null;
+            clearTimerInterval();
+            timerDisplay.textContent = '';
+        }
+
+        // === SOUND CARD CLICK ===
+        soundCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const soundType = card.dataset.sound;
+                const iconEl = card.querySelector('.icon');
+
+                if (card.classList.contains('playing')) {
+                    // Stop this sound
+                    card.classList.remove('playing');
+                    iconEl.style.removeProperty('--sync-delay');
+                    stopSound(soundType);
+
+                    // Reset animation start time if no sounds playing
+                    if (activeNodes.size === 0) {
+                        animationStartTime = null;
+                    }
+                } else {
+                    // Start this sound
+                    // Sync animation to shared timeline
+                    if (animationStartTime === null) {
+                        animationStartTime = performance.now();
+                        iconEl.style.setProperty('--sync-delay', '0s');
+                    } else {
+                        // Calculate negative delay to sync with existing animations
+                        const elapsed = performance.now() - animationStartTime;
+                        const cyclePosition = elapsed % ANIMATION_DURATION;
+                        const delayMs = -cyclePosition;
+                        iconEl.style.setProperty('--sync-delay', `${delayMs}ms`);
+                    }
+
+                    card.classList.add('playing');
+                    startSound(soundType);
+                }
+            });
+        });
+
+        // === VOLUME (with magnetic 5% snapping) ===
+        volumeSlider.addEventListener('input', () => {
+            const vol = parseInt(volumeSlider.value);
+            volumeValue.textContent = vol + '%';
+
+            // Update all active sounds
+            activeNodes.forEach(nodes => {
+                nodes.gainNode.gain.linearRampToValueAtTime(vol / 100, audioCtx.currentTime + 0.1);
+            });
+        });
+
+        // Snap to 5% on change (in case browser doesn't respect step)
+        volumeSlider.addEventListener('change', () => {
+            const snapped = Math.round(volumeSlider.value / 5) * 5;
+            volumeSlider.value = snapped;
+            volumeValue.textContent = snapped + '%';
+            localStorage.setItem('mindful-sounds-volume', snapped);
+        });
+
+        // === TIMER ===
+        timerBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                timerBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                timerMinutes = parseInt(btn.dataset.minutes);
+
+                clearTimerInterval();
+                timerDisplay.textContent = '';
+
+                if (activeNodes.size > 0 && timerMinutes > 0) {
+                    startTimer();
+                }
+            });
+        });
+
+        function startTimer() {
+            clearTimerInterval();
+            if (timerMinutes <= 0) return;
+
+            timerEndTime = Date.now() + timerMinutes * 60 * 1000;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                const remaining = timerEndTime - Date.now();
+                if (remaining <= 0) {
+                    stopAllSounds();
+                    timerDisplay.textContent = 'Timer ended';
+                    setTimeout(() => { timerDisplay.textContent = ''; }, 3000);
+                } else {
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const remaining = Math.max(0, timerEndTime - Date.now());
+            const mins = Math.floor(remaining / 60000);
+            const secs = Math.floor((remaining % 60000) / 1000);
+            timerDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function clearTimerInterval() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // === INIT ===
+        const savedVolume = localStorage.getItem('mindful-sounds-volume');
+        if (savedVolume) {
+            volumeSlider.value = savedVolume;
+            volumeValue.textContent = savedVolume + '%';
+        }
+    </script>
+</body>
+
+</html>
