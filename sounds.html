@@ -589,8 +589,11 @@
         let timerMinutes = 0;
         let timerInterval = null;
         let timerEndTime = null;
-        let animationStartTime = null; // Shared animation sync time
-        const ANIMATION_DURATION = 1500; // 1.5s in ms
+        let animationStartTime = null;
+        const ANIMATION_DURATION = 1500;
+
+        // iOS background audio keeper
+        let silentAudio = null;
 
         // === THEME ===
         function setTheme(mode) {
@@ -618,6 +621,36 @@
             if ((localStorage.getItem('mindful-theme') || 'system') === 'system') setTheme('system');
         });
 
+        // === iOS BACKGROUND AUDIO WORKAROUND ===
+        // iOS Safari requires an <audio> element to keep the audio session alive in background
+        function createSilentAudioKeeper() {
+            if (silentAudio) return;
+
+            // Create a tiny silent audio loop using a data URL (WAV format, ~0.1s of silence)
+            // This keeps iOS audio session active when app is backgrounded
+            const silentWav = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+
+            silentAudio = document.createElement('audio');
+            silentAudio.src = silentWav;
+            silentAudio.loop = true;
+            silentAudio.volume = 0.01; // Nearly silent but not zero (iOS may optimize zero volume)
+            silentAudio.setAttribute('playsinline', '');
+            silentAudio.setAttribute('webkit-playsinline', '');
+
+            // Play the silent audio to establish audio session
+            silentAudio.play().catch(() => {
+                // Will try again on user interaction
+            });
+        }
+
+        function stopSilentAudioKeeper() {
+            if (silentAudio) {
+                silentAudio.pause();
+                silentAudio.src = '';
+                silentAudio = null;
+            }
+        }
+
         // === AUDIO ===
         function initAudio() {
             if (!audioCtx) {
@@ -626,6 +659,9 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
+
+            // Start silent audio keeper for iOS background playback
+            createSilentAudioKeeper();
         }
 
         function createNoiseBuffer(type) {
@@ -865,10 +901,11 @@
             // Update media session
             updateMediaSession();
 
-            // Clear timer if no sounds playing
+            // Clear timer and audio keeper if no sounds playing
             if (activeNodes.size === 0) {
                 clearTimerInterval();
                 timerDisplay.textContent = '';
+                stopSilentAudioKeeper();
             }
         }
 
@@ -889,6 +926,7 @@
             clearTimerInterval();
             timerDisplay.textContent = '';
             updateMediaSession();
+            stopSilentAudioKeeper();
         }
 
         // === SOUND CARD CLICK ===
