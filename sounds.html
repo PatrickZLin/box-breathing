@@ -791,10 +791,64 @@
 
             activeNodes.set(soundType, { noiseNode, gainNode, lpFilter, hpFilter });
 
+            // Update Media Session for background audio on mobile
+            updateMediaSession();
+
             // Start timer if set and not already running
             if (timerMinutes > 0 && !timerInterval) {
                 startTimer();
             }
+        }
+
+        // === MEDIA SESSION API (for background audio on mobile) ===
+        const soundNames = {
+            white: 'White Noise',
+            pink: 'Pink Noise',
+            brown: 'Brown Noise',
+            rain: 'Rain',
+            ocean: 'Ocean Waves',
+            wind: 'Wind'
+        };
+
+        function updateMediaSession() {
+            if (!('mediaSession' in navigator)) return;
+
+            const playingSounds = Array.from(activeNodes.keys());
+            if (playingSounds.length === 0) {
+                // Clear media session when nothing is playing
+                navigator.mediaSession.metadata = null;
+                navigator.mediaSession.playbackState = 'none';
+                return;
+            }
+
+            // Build title from playing sounds
+            const title = playingSounds.map(s => soundNames[s] || s).join(' + ');
+
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title,
+                artist: 'Mindful Sounds',
+                album: 'Ambient',
+            });
+
+            navigator.mediaSession.playbackState = 'playing';
+
+            // Handle lock screen controls
+            navigator.mediaSession.setActionHandler('play', () => {
+                // Resume audio context if suspended
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            });
+
+            navigator.mediaSession.setActionHandler('pause', () => {
+                stopAllSounds();
+                soundCards.forEach(c => c.classList.remove('playing'));
+            });
+
+            navigator.mediaSession.setActionHandler('stop', () => {
+                stopAllSounds();
+                soundCards.forEach(c => c.classList.remove('playing'));
+            });
         }
 
         function stopSound(soundType) {
@@ -807,6 +861,9 @@
                 }, 250);
                 activeNodes.delete(soundType);
             }
+
+            // Update media session
+            updateMediaSession();
 
             // Clear timer if no sounds playing
             if (activeNodes.size === 0) {
@@ -831,6 +888,7 @@
             animationStartTime = null;
             clearTimerInterval();
             timerDisplay.textContent = '';
+            updateMediaSession();
         }
 
         // === SOUND CARD CLICK ===
